@@ -7,7 +7,7 @@ import {
     IFluidContainer,
     IMember,
     IServiceAudience,
-    TreeView
+    TreeView,
 } from 'fluid-framework';
 import { undefinedUserId } from '../utils/utils';
 import { Canvas } from './canvasux';
@@ -21,20 +21,20 @@ export function ReactApp(props: {
     const [currentUser, setCurrentUser] = useState(undefinedUserId);
     const [connectionState, setConnectionState] = useState('');
     const [saved, setSaved] = useState(false);
-    const [fluidMembers, setFluidMembers] = useState<string[]>([]);    
-    
+    const [fluidMembers, setFluidMembers] = useState<string[]>([]);
+
     return (
         <div
             id="main"
             className="flex flex-col bg-transparent h-screen w-full overflow-hidden overscroll-none"
         >
             <Header
-                    saved={saved}
-                    connectionState={connectionState}
-                    fluidMembers={fluidMembers}
-                    clientId={currentUser}                                   
-                />
-            <div className="flex h-[calc(100vh-48px)] flex-row ">                
+                saved={saved}
+                connectionState={connectionState}
+                fluidMembers={fluidMembers}
+                clientId={currentUser}
+            />
+            <div className="flex h-[calc(100vh-48px)] flex-row ">
                 <Canvas
                     appTree={props.appTree}
                     sessionTree={props.sessionTree}
@@ -56,7 +56,7 @@ export function Header(props: {
     saved: boolean;
     connectionState: string;
     fluidMembers: string[];
-    clientId: string;    
+    clientId: string;
 }): JSX.Element {
     return (
         <div className="h-[48px] flex shrink-0 flex-row items-center justify-between bg-black text-base text-white z-40 w-full">
@@ -68,4 +68,3 @@ export function Header(props: {
         </div>
     );
 }
-

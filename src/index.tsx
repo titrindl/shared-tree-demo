@@ -13,7 +13,6 @@ import { appTreeConfiguration } from './schema/app_schema';
 import { sessionTreeConfiguration } from './schema/session_schema';
 
 async function start() {
-    
     // create the root element for React
     const app = document.createElement('div');
     app.id = 'app';
@@ -26,34 +25,41 @@ async function start() {
     let containerId = location.hash.substring(1);
 
     // Initialize Fluid Container
-    const { services, container } = await loadFluidData(containerId, notesContainerSchema);    
+    const { services, container } = await loadFluidData(
+        containerId,
+        notesContainerSchema
+    );
 
     // Initialize the SharedTree DDSes
-    const sessionTree = (container.initialObjects.sessionData as ITree).schematize(sessionTreeConfiguration); 
-    const appTree = (container.initialObjects.appData as ITree).schematize(appTreeConfiguration);
-    
+    const sessionTree = (container.initialObjects.sessionData as ITree).schematize(
+        sessionTreeConfiguration
+    );
+    const appTree = (container.initialObjects.appData as ITree).schematize(
+        appTreeConfiguration
+    );
+
     // Initialize debugging tools
     initializeDevtools({
         logger: devtoolsLogger,
         initialContainers: [
             {
                 container,
-                containerKey: "My Container",
+                containerKey: 'My Container',
             },
         ],
     });
-    
+
     // Render the app - note we attach new containers after render so
-    // the app renders instantly on create new flow. The app will be 
-    // interactive immediately.    
+    // the app renders instantly on create new flow. The app will be
+    // interactive immediately.
     root.render(
         <DndProvider backend={HTML5Backend}>
-            <ReactApp 
-                appTree={appTree} 
-                sessionTree={sessionTree} 
-                audience={services.audience} 
-                container={container} 
-                />
+            <ReactApp
+                appTree={appTree}
+                sessionTree={sessionTree}
+                audience={services.audience}
+                container={container}
+            />
         </DndProvider>
     );
 
@@ -63,7 +69,7 @@ async function start() {
         containerId = await container.attach();
 
         // The newly attached container is given a unique ID that can be used to access the container in another session
-        history.replaceState(undefined, "", "#" + containerId);
+        history.replaceState(undefined, '', '#' + containerId);
     }
 }
 

@@ -1,7 +1,4 @@
-import {
-    TreeConfiguration,
-    SchemaFactory,
-} from 'fluid-framework';
+import { TreeConfiguration, SchemaFactory } from 'fluid-framework';
 import { addNote } from '../utils/app_helpers';
 import { Guid } from 'guid-typescript';
 
@@ -42,7 +39,7 @@ export class Note extends sf.object('Note', {
     }
 }
 
-// Schema for a list of Notes. 
+// Schema for a list of Notes.
 export class Notes extends sf.array('Notes', Note) {
     public newNote(author: string) {
         addNote(this, '', author);
@@ -56,10 +53,56 @@ export class Group extends sf.object('Group', {
     notes: Notes,
 }) {}
 
-// Schema for a list of Notes and Groups. 
+export class TableRef extends sf.object('TableRef', {
+    tableId: sf.string,
+}) {}
+
+export class TableResult extends sf.object('TableEntry', {
+    id: sf.string,
+    result: sf.array([sf.string, TableRef]),
+}) {}
+
+export class Table extends sf.object('Table', {
+    id: sf.string,
+    name: sf.string,
+    rows: sf.map(TableResult),
+}) {
+    public setName(name: string) {
+        this.name = name
+    }
+
+    public roll(): string {
+        const dieSize = Math.max.apply(null, Array.from(this.rows.keys(), (key) => Number.parseInt(key)));
+        const roll = Math.floor(Math.random()*dieSize + 1);
+        return this.rows.get(roll.toString())?.result.reduce<string>((prev, cur) => prev + ((cur as TableRef).tableId ?? cur), '') ?? 'invalid roll';
+    }
+
+    public addRowsFromText(text: string) {
+        const rows = text.split('\n');
+        this.setName(rows[0]);
+        for (const row of rows.slice(1)) {
+            const spaceIndex = row.indexOf(' ');
+            const roll = row.substring(0, spaceIndex);
+            const result = row.substring(spaceIndex + 1);
+            if (result) {
+                this.addRow(roll, result);
+            }
+        }
+    }
+    
+    public addRow(roll: string, result: string) {
+        const id = Guid.create().toString();
+        this.rows.set(roll, new TableResult({
+            id,
+            result: [result],
+        }));
+    }
+}
+
+// Schema for a list of Notes and Groups.
 export class Items extends sf.array('Items', [Group, Note]) {
-    public newNote(author: string) {
-        addNote(this, '', author);
+    public newNote(author: string, text?: string) {
+        addNote(this, text ?? '', author);
     }
 
     // Add a new group (container for notes) to the SharedTree.
@@ -78,7 +121,19 @@ export class Items extends sf.array('Items', [Group, Note]) {
 // Define a root type.
 export class App extends sf.object('App', {
     items: Items,
-}) {}
+    tables: sf.map(Table),
+}) {
+    public newTable(name: string): Table {
+        const id = Guid.create().toString()
+        const table = new Table({
+            id,
+            name,
+            rows: new Map(),
+        });
+        this.tables.set(id, table);
+        return table;
+    }
+}
 
 // Export the tree config appropriate for this schema
 // This is passed into the SharedTree when it is initialized
@@ -87,5 +142,6 @@ export const appTreeConfiguration = new TreeConfiguration(
     () => ({
         // initial tree
         items: [],
+        tables: new Map(),
     })
 );

@@ -9,14 +9,28 @@ import {
     RectangleLandscapeRegular,
     ArrowUndoFilled,
     ArrowRedoFilled,
+    TableAddRegular,
 } from '@fluentui/react-icons';
 import { Session } from '../schema/session_schema';
 import { getSelectedNotes } from '../utils/session_helpers';
 
+export function NewTableButton(props: { root: App }): JSX.Element {
+    return (
+        <IconButton
+            handleClick={(e) => {
+                e.stopPropagation();
+                props.root.newTable('[new table]');
+            }}
+            color="white"
+            icon={<TableAddRegular />}
+        >Add Table</IconButton>
+    );
+}
+
 export function NewGroupButton(props: {
     root: App;
     session: Session;
-    clientId: string    
+    clientId: string;
 }): JSX.Element {
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -24,12 +38,11 @@ export function NewGroupButton(props: {
 
         const ids = getSelectedNotes(props.session, props.clientId);
 
-        for (const id of ids) 
-        {
-            const n = findNote(props.root.items, id)
+        for (const id of ids) {
+            const n = findNote(props.root.items, id);
             if (n instanceof Note) {
                 moveItem(n, Infinity, group.notes);
-            }            
+            }
         }
     };
     return (
@@ -62,7 +75,11 @@ export function NewNoteButton(props: { root: App; clientId: string }): JSX.Eleme
     );
 }
 
-export function DeleteNotesButton(props: { session: Session, app: App, clientId: string }): JSX.Element {
+export function DeleteNotesButton(props: {
+    session: Session;
+    app: App;
+    clientId: string;
+}): JSX.Element {
     const handleClick = () => {
         const ids = getSelectedNotes(props.session, props.clientId);
         for (const i of ids) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { App, Note, Group } from '../schema/app_schema';
+import { App, Note, Group, TableRef } from '../schema/app_schema';
 import { Session } from '../schema/session_schema';
 import {
     ConnectionState,
@@ -17,6 +17,7 @@ import {
     NewNoteButton,
     DeleteNotesButton,
     ButtonGroup,
+    NewTableButton,
 } from './buttonux';
 import { undefinedUserId } from '../utils/utils';
 
@@ -99,6 +100,7 @@ export function Canvas(props: {
 
     return (
         <div className="relative flex grow-0 h-full w-full bg-transparent">
+            <Tables app={appRoot}></Tables>
             <RootItems
                 app={appRoot}
                 clientId={props.currentUser}
@@ -107,6 +109,7 @@ export function Canvas(props: {
             />
             <Floater>
                 <ButtonGroup>
+                    <NewTableButton root={appRoot}></NewTableButton>
                     <NewGroupButton
                         root={appRoot}
                         session={sessionRoot}
@@ -122,6 +125,84 @@ export function Canvas(props: {
             </Floater>
         </div>
     );
+}
+
+function Tables({ app }: { app: App }): JSX.Element {
+    const tables: JSX.Element[] = [];
+    for (const table of app.tables.values()) {
+        const rollRef = React.useRef<HTMLInputElement>(null);
+        const rollInput = <input ref={rollRef} type="text" />;
+        const resultRef = React.useRef<HTMLInputElement>(null);
+        const resultInput = <input ref={resultRef} type="text" />;
+        const importRef = React.useRef<HTMLTextAreaElement>(null);
+        const importArea = <textarea ref={importRef}></textarea>;
+        tables.push(
+            <div>
+                <input
+                    type='text'
+                    onChange={(e) => {
+                        e.preventDefault();
+                        table.setName(e.currentTarget.value)
+                    }}
+                    value={table.name}
+                />
+                <table>
+                    <tr>
+                        <th>
+                            <button
+                                onClick={() => {
+                                    const result = table.roll();
+                                    app.items.newNote('anon', table.name + '\n' + result);
+                                }}
+                            >
+                                roll
+                            </button>
+                        </th>
+                        <th>result</th>
+                    </tr>
+                    {Array.from(table.rows.entries()).sort(([k1], [k2]) => Number.parseInt(k1) - Number.parseInt(k2)).map(([roll, result]) => (
+                        <tr key={roll}>
+                            <td>{roll}</td>
+                            <td>
+                                {result.result.reduce<string>(
+                                    (prev, val): string =>
+                                        prev + ((val as TableRef).tableId ?? val),
+                                    ''
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </table>
+                {rollInput}
+                {resultInput}
+                <button
+                    onClick={() => {
+                        if (rollRef.current && resultRef.current) {
+                            table.addRow(
+                                rollRef.current.value,
+                                resultRef.current.value
+                            );
+                            rollRef.current.value = resultRef.current.value = '';
+                        }
+                    }}
+                >
+                    Add Row
+                </button>
+                {importArea}
+                <button
+                    onClick={() => {
+                        if (importRef.current) {
+                            table.addRowsFromText(importRef.current.value);
+                            importRef.current.value = '';
+                        }
+                    }}
+                >
+                    Import
+                </button>
+            </div>
+        );
+    }
+    return <div style={{ overflow: 'scroll' }}>{...tables}</div>;
 }
 
 function RootItems(props: {
